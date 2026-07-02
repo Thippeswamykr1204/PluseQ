@@ -130,9 +130,38 @@ npm install
 npm run dev               # http://localhost:5173
 ```
 
-Open `http://localhost:5173`, register a manager account, and start creating queues.
+### 3. Demo data (optional but recommended for review)
+```bash
+cd server
+npm run seed
+```
+Creates a demo manager with two queues and ~30 tokens spread across the last 10 days (realistic wait/service times, a few cancellations) so the Analytics dashboard isn't empty on first look.
+```
+email:    demo@pulseq.dev
+password: demo1234
+```
+
+### 4. Running tests
+```bash
+cd server
+npm test
+```
+Covers: registration/login validation, duplicate-email rejection, queue ownership isolation (a manager can't see/touch another manager's queues or tokens), sequential token numbering, reorder boundary conditions (can't move the top token up or the bottom token down), the double-assign race-condition guard on "Call Next", the complete/cancel state-machine rules (can't complete a non-serving token, can't cancel an already-served token). Uses `mongodb-memory-server` — no real database needed to run the suite.
 
 ---
+
+## Performance
+
+- Route-level code-splitting (`React.lazy` + `Suspense`) — Analytics (recharts) and QueueDetail only download when a manager navigates there, keeping the initial login bundle small.
+- MongoDB compound indexes on `(queue, status, position)` for token queries and `(manager, createdAt)` for queue listing — the two access patterns actually used by the API, not blanket single-field indexes.
+- Aggregation pipelines (not application-level loops) for all analytics — trend, peak-hour, and status-breakdown numbers are computed in MongoDB, not fetched-then-reduced in Node.
+
+## Accessibility
+
+- All icon-only buttons (reorder, cancel, close) carry `aria-label`
+- Modals use `role="dialog"` / `role="alertdialog"` with `aria-labelledby`
+- Visible `focus-visible` ring on every interactive element for keyboard navigation
+
 
 ## Deployment Suggestion
 
