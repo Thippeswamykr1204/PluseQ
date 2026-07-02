@@ -52,6 +52,7 @@ export default function Navbar() {
             }}
             className="btn-icon"
             title="Log out"
+            aria-label="Log out"
           >
             <LogOut size={16} />
           </button>

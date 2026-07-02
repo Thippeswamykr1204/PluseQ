@@ -14,6 +14,9 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = "Co
         >
           <motion.div
             className="card w-full max-w-sm p-6"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="confirm-title"
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
@@ -24,11 +27,11 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = "Co
               <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${danger ? "bg-red-500/10 text-red-400" : "bg-brand-500/10 text-brand-400"}`}>
                 <AlertTriangle size={18} />
               </div>
-              <button onClick={onCancel} className="btn-icon">
+              <button onClick={onCancel} className="btn-icon" aria-label="Close dialog">
                 <X size={16} />
               </button>
             </div>
-            <h3 className="text-base font-semibold text-slate-100">{title}</h3>
+            <h3 id="confirm-title" className="text-base font-semibold text-slate-100">{title}</h3>
             <p className="text-sm text-slate-400 mt-1.5 leading-relaxed">{message}</p>
             <div className="flex gap-2 mt-5">
               <button onClick={onCancel} className="btn-secondary flex-1">Cancel</button>

@@ -266,6 +266,7 @@ export default function QueueDetail() {
                           disabled={idx === 0 || busyTokenId === t._id}
                           className="btn-icon"
                           title="Move up"
+                          aria-label={`Move ${t.patientName} up in the queue`}
                         >
                           <ChevronUp size={16} />
                         </button>
@@ -274,6 +275,7 @@ export default function QueueDetail() {
                           disabled={idx === tokens.waiting.length - 1 || busyTokenId === t._id}
                           className="btn-icon"
                           title="Move down"
+                          aria-label={`Move ${t.patientName} down in the queue`}
                         >
                           <ChevronDown size={16} />
                         </button>
@@ -282,6 +284,7 @@ export default function QueueDetail() {
                           disabled={busyTokenId === t._id}
                           className="btn-icon hover:text-red-400"
                           title="Cancel token"
+                          aria-label={`Cancel token for ${t.patientName}`}
                         >
                           <XCircle size={16} />
                         </button>

@@ -14,6 +14,9 @@ export default function Modal({ open, title, onClose, children }) {
         >
           <motion.div
             className="card w-full max-w-md p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
             initial={{ opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
@@ -21,8 +24,8 @@ export default function Modal({ open, title, onClose, children }) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-semibold text-slate-100">{title}</h3>
-              <button onClick={onClose} className="btn-icon">
+              <h3 id="modal-title" className="text-base font-semibold text-slate-100">{title}</h3>
+              <button onClick={onClose} className="btn-icon" aria-label="Close dialog">
                 <X size={16} />
               </button>
             </div>
