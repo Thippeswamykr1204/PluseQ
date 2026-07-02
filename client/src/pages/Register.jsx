@@ -56,8 +56,8 @@ export default function Register() {
           <div>
             <label className="label">Full name</label>
             <div className="relative">
-              <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input className="input pl-10" placeholder="Dr. Asha Rao" value={form.name}
+              <User size={15} className="absolute left-4 pointer-events-none top-1/2 -translate-y-1/2 text-slate-500" />
+              <input className="input pl-11" placeholder="Dr. Asha Rao" style={{ paddingLeft: "2.75rem" }} value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             {errors.name && <p className="text-xs text-red-400 mt-1.5">{errors.name}</p>}
@@ -66,8 +66,8 @@ export default function Register() {
           <div>
             <label className="label">Hospital / Facility (optional)</label>
             <div className="relative">
-              <Building2 size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input className="input pl-10" placeholder="City General Hospital" value={form.hospitalName}
+              <Building2 size={15} className="absolute left-4 pointer-events-none top-1/2 -translate-y-1/2 text-slate-500" />
+              <input className="input pl-11" placeholder="City General Hospital" style={{ paddingLeft: "2.75rem" }} value={form.hospitalName}
                 onChange={(e) => setForm({ ...form, hospitalName: e.target.value })} />
             </div>
           </div>
@@ -75,8 +75,8 @@ export default function Register() {
           <div>
             <label className="label">Email</label>
             <div className="relative">
-              <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input type="email" className="input pl-10" placeholder="you@hospital.com" value={form.email}
+              <Mail size={15} className="absolute left-4 pointer-events-none top-1/2 -translate-y-1/2 text-slate-500" />
+              <input type="email" className="input pl-11" placeholder="you@hospital.com" style={{ paddingLeft: "2.75rem" }} value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </div>
             {errors.email && <p className="text-xs text-red-400 mt-1.5">{errors.email}</p>}
@@ -85,8 +85,8 @@ export default function Register() {
           <div>
             <label className="label">Password</label>
             <div className="relative">
-              <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input type="password" className="input pl-10" placeholder="At least 6 characters" value={form.password}
+              <Lock size={15} className="absolute left-4 pointer-events-none top-1/2 -translate-y-1/2 text-slate-500" />
+              <input type="password" className="input pl-11" placeholder="At least 6 characters" style={{ paddingLeft: "2.75rem" }} value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })} />
             </div>
             {errors.password && <p className="text-xs text-red-400 mt-1.5">{errors.password}</p>}

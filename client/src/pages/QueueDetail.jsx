@@ -83,9 +83,14 @@ export default function QueueDetail() {
       toast.error("Patient name must be at least 2 characters");
       return;
     }
+    if (form.phone && form.phone.length !== 10) {
+      toast.error("Phone number must be exactly 10 digits");
+      return;
+    }
     setSubmitting(true);
     try {
-      const res = await api.post(`/queues/${id}/tokens`, form);
+      const payload = { ...form, phone: form.phone ? `+91${form.phone}` : "" };
+      const res = await api.post(`/queues/${id}/tokens`, payload);
       toast.success(`Token #${res.data.data.tokenNumber} added`);
       setModalOpen(false);
       setForm({ patientName: "", phone: "", priority: false });
@@ -325,12 +330,23 @@ export default function QueueDetail() {
           </div>
           <div>
             <label className="label">Phone (optional)</label>
-            <input
-              className="input"
-              placeholder="+91 98765 43210"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            />
+            <div className="flex items-center input !p-0 overflow-hidden">
+              <span className="px-3.5 text-sm text-slate-400 border-r border-surface-border select-none shrink-0">
+                +91
+              </span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                className="flex-1 bg-transparent px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none"
+                placeholder="98765 43210"
+                maxLength={10}
+                value={form.phone}
+                onChange={(e) => {
+                  const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setForm({ ...form, phone: digitsOnly });
+                }}
+              />
+            </div>
           </div>
           <label className="flex items-center gap-2.5 cursor-pointer select-none">
             <input

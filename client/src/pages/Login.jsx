@@ -55,10 +55,11 @@ export default function Login() {
           <div>
             <label className="label">Email</label>
             <div className="relative">
-              <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Mail size={15} className="absolute left-4 pointer-events-none top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 type="email"
-                className="input pl-10"
+                className="input pl-11"
+                style={{ paddingLeft: "2.75rem" }}
                 placeholder="you@hospital.com"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -70,10 +71,11 @@ export default function Login() {
           <div>
             <label className="label">Password</label>
             <div className="relative">
-              <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Lock size={15} className="absolute left-4 pointer-events-none top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 type="password"
-                className="input pl-10"
+                className="input pl-11"
+                style={{ paddingLeft: "2.75rem" }}
                 placeholder="••••••••"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
