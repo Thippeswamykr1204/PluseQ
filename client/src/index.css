@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-surface text-slate-100 antialiased;
+  background-image: radial-gradient(circle at 20% 0%, rgba(59,99,246,0.08), transparent 40%),
+    radial-gradient(circle at 80% 100%, rgba(59,99,246,0.06), transparent 40%);
+  background-attachment: fixed;
+}
+
+::selection { background: rgba(59,99,246,0.35); }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #253046; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #32405c; }
+
+.card {
+  @apply bg-surface-raised border border-surface-border rounded-2xl shadow-card;
+}
+
+.skeleton {
+  @apply relative overflow-hidden bg-surface-border/60 rounded-lg;
+}
+.skeleton::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  background-size: 500px 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-150 select-none disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97];
+}
+.btn-primary {
+  @apply btn bg-brand-500 text-white hover:bg-brand-600 shadow-glow px-4 py-2.5 text-sm;
+}
+.btn-secondary {
+  @apply btn bg-surface-raised border border-surface-border text-slate-200 hover:border-brand-500/50 hover:bg-brand-500/5 px-4 py-2.5 text-sm;
+}
+.btn-ghost {
+  @apply btn text-slate-400 hover:text-slate-100 hover:bg-white/5 px-3 py-2 text-sm;
+}
+.btn-danger {
+  @apply btn bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 px-4 py-2.5 text-sm;
+}
+.btn-icon {
+  @apply btn h-9 w-9 text-slate-400 hover:text-slate-100 hover:bg-white/5 rounded-lg disabled:hover:bg-transparent;
+}
+
+.input {
+  @apply w-full bg-surface border border-surface-border rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-colors focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20;
+}
+
+.label {
+  @apply block text-xs font-medium text-slate-400 mb-1.5;
+}
+
+.badge {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+}
+.badge-waiting { @apply badge bg-slate-500/15 text-slate-300; }
+.badge-serving { @apply badge bg-brand-500/15 text-brand-300; }
+.badge-served { @apply badge bg-emerald-500/15 text-emerald-400; }
+.badge-cancelled { @apply badge bg-red-500/15 text-red-400; }
