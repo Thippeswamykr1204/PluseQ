@@ -1,36 +1,119 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Plus, Users, Activity as ActivityIcon, ChevronRight, ClipboardList } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Plus, Users, Activity as ActivityIcon, ChevronRight, ClipboardList,
+  Clock, CheckCircle2, LayoutGrid, UserPlus, PhoneCall, XCircle,
+} from "lucide-react";
 import toast from "react-hot-toast";
+import { io } from "socket.io-client";
 import api from "../api/axios.js";
+import { useAuth } from "../context/AuthContext.jsx";
 import Navbar from "../components/Navbar.jsx";
 import Modal from "../components/Modal.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { SkeletonCard } from "../components/Skeleton.jsx";
 
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+
+const formatMs = (ms) => {
+  if (!ms) return "0m";
+  const mins = Math.round(ms / 60000);
+  if (mins < 60) return `${mins}m`;
+  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+};
+
+const timeAgo = (dateStr) => {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 5) return "just now";
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  return `${Math.floor(diff / 3600)}h ago`;
+};
+
+const HEALTH_STYLES = {
+  normal: { dot: "bg-emerald-400", label: "Normal", text: "text-emerald-400" },
+  busy: { dot: "bg-amber-400", label: "Busy", text: "text-amber-400" },
+  critical: { dot: "bg-red-400", label: "Critical", text: "text-red-400" },
+};
+
+const ACTIVITY_ICON = {
+  added: { icon: UserPlus, cls: "bg-brand-500/10 text-brand-400" },
+  serving: { icon: PhoneCall, cls: "bg-amber-500/10 text-amber-400" },
+  served: { icon: CheckCircle2, cls: "bg-emerald-500/10 text-emerald-400" },
+  cancelled: { icon: XCircle, cls: "bg-red-500/10 text-red-400" },
+};
+
+const SummaryCard = ({ icon: Icon, label, value, accent }) => {
+  const accentMap = {
+    brand: "bg-brand-500/10 text-brand-400",
+    amber: "bg-amber-500/10 text-amber-400",
+    emerald: "bg-emerald-500/10 text-emerald-400",
+  };
+  return (
+    <div className="card p-4 flex items-center gap-3">
+      <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${accentMap[accent]}`}>
+        <Icon size={16} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-lg font-bold text-slate-50 leading-tight">{value}</p>
+        <p className="text-xs text-slate-400 truncate">{label}</p>
+      </div>
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { manager } = useAuth();
   const [queues, setQueues] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({ name: "", description: "" });
   const [submitting, setSubmitting] = useState(false);
+  const socketRef = useRef(null);
 
-  const fetchQueues = async () => {
+  const fetchAll = useCallback(async () => {
     try {
-      const res = await api.get("/queues");
-      setQueues(res.data.data);
+      const [qRes, sRes, aRes] = await Promise.all([
+        api.get("/queues"),
+        api.get("/analytics/today"),
+        api.get("/analytics/activity"),
+      ]);
+      setQueues(qRes.data.data);
+      setSummary(sRes.data.data);
+      setActivity(aRes.data.data);
     } catch (err) {
-      toast.error("Failed to load queues");
+      toast.error("Failed to load dashboard");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchQueues();
-  }, []);
+    fetchAll();
+    if (!manager?.id) return;
+
+    const socket = io(SOCKET_URL, { transports: ["websocket"] });
+    socketRef.current = socket;
+    socket.emit("manager:join", manager.id);
+
+    // New activity pushes straight into the feed; queue cards (waiting
+    // counts, health) refresh via a lightweight refetch since those are
+    // aggregate counts rather than a single new row to prepend.
+    socket.on("activity:new", (item) => {
+      setActivity((prev) => [item, ...prev].slice(0, 15));
+      api.get("/queues").then((res) => setQueues(res.data.data)).catch(() => {});
+      api.get("/analytics/today").then((res) => setSummary(res.data.data)).catch(() => {});
+    });
+
+    return () => {
+      socket.emit("manager:leave", manager.id);
+      socket.disconnect();
+    };
+  }, [manager?.id, fetchAll]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -44,7 +127,7 @@ export default function Dashboard() {
       toast.success("Queue created");
       setModalOpen(false);
       setForm({ name: "", description: "" });
-      fetchQueues();
+      fetchAll();
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to create queue");
     } finally {
@@ -66,52 +149,112 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
-          </div>
-        ) : queues.length === 0 ? (
-          <EmptyState
-            icon={ClipboardList}
-            title="No queues yet"
-            description="Create your first queue to start managing patients and tokens."
-            action={
-              <button onClick={() => setModalOpen(true)} className="btn-primary">
-                <Plus size={16} /> Create Queue
-              </button>
-            }
-          />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {queues.map((q, i) => (
-              <motion.button
-                key={q._id}
-                onClick={() => navigate(`/queues/${q._id}`)}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, delay: i * 0.04 }}
-                className="card p-5 text-left hover:border-brand-500/40 transition-colors group"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="h-10 w-10 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center">
-                    <ActivityIcon size={18} />
-                  </div>
-                  <ChevronRight size={16} className="text-slate-600 group-hover:text-brand-400 group-hover:translate-x-0.5 transition-all mt-2" />
-                </div>
-                <h3 className="text-slate-100 font-semibold mt-4 truncate">{q.name}</h3>
-                <p className="text-xs text-slate-500 mt-1 line-clamp-1">{q.description || "No description"}</p>
-                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-surface-border">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <Users size={13} /> {q.waitingCount} waiting
-                  </div>
-                  {q.servingCount > 0 && (
-                    <span className="badge-serving">Serving now</span>
-                  )}
-                </div>
-              </motion.button>
-            ))}
+        {/* Today's summary strip */}
+        {!loading && summary && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <SummaryCard icon={Users} label="Patients today" value={summary.patientsToday} accent="brand" />
+            <SummaryCard icon={Clock} label="Avg wait today" value={formatMs(summary.avgWaitTodayMs)} accent="amber" />
+            <SummaryCard icon={CheckCircle2} label="Served today" value={summary.servedToday} accent="emerald" />
+            <SummaryCard icon={LayoutGrid} label="Active queues" value={summary.activeQueues} accent="brand" />
           </div>
         )}
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Queue cards */}
+          <div className="xl:col-span-2">
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
+              </div>
+            ) : queues.length === 0 ? (
+              <EmptyState
+                icon={ClipboardList}
+                title="No queues yet"
+                description="Create your first queue to start managing patients and tokens."
+                action={
+                  <button onClick={() => setModalOpen(true)} className="btn-primary">
+                    <Plus size={16} /> Create Queue
+                  </button>
+                }
+              />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {queues.map((q, i) => {
+                  const health = HEALTH_STYLES[q.health] || HEALTH_STYLES.normal;
+                  return (
+                    <motion.button
+                      key={q._id}
+                      onClick={() => navigate(`/queues/${q._id}`)}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: i * 0.04 }}
+                      className="card p-5 text-left hover:border-brand-500/40 transition-colors group"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="h-10 w-10 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center">
+                          <ActivityIcon size={18} />
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`flex items-center gap-1.5 text-xs font-medium ${health.text}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${health.dot}`} />
+                            {health.label}
+                          </span>
+                          <ChevronRight size={16} className="text-slate-600 group-hover:text-brand-400 group-hover:translate-x-0.5 transition-all" />
+                        </div>
+                      </div>
+                      <h3 className="text-slate-100 font-semibold mt-4 truncate">{q.name}</h3>
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-1">{q.description || "No description"}</p>
+                      <div className="flex items-center gap-4 mt-4 pt-4 border-t border-surface-border">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                          <Users size={13} /> {q.waitingCount} waiting
+                        </div>
+                        {q.servingCount > 0 && <span className="badge-serving">Serving now</span>}
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Live activity feed */}
+          <div className="card p-5 h-fit">
+            <h2 className="text-sm font-semibold text-slate-300 mb-4">Live activity</h2>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-10 w-full" />)}
+              </div>
+            ) : activity.length === 0 ? (
+              <p className="text-sm text-slate-500 py-6 text-center">No activity yet. Add a patient to get started.</p>
+            ) : (
+              <ul className="space-y-1 max-h-[520px] overflow-y-auto">
+                <AnimatePresence initial={false}>
+                  {activity.map((item) => {
+                    const cfg = ACTIVITY_ICON[item.type] || ACTIVITY_ICON.added;
+                    const Icon = cfg.icon;
+                    return (
+                      <motion.li
+                        key={item.id}
+                        layout
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex items-start gap-3 py-2.5 border-b border-surface-border last:border-0"
+                      >
+                        <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.cls}`}>
+                          <Icon size={13} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm text-slate-200 leading-snug">{item.label}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{item.queueName} · {timeAgo(item.timestamp)}</p>
+                        </div>
+                      </motion.li>
+                    );
+                  })}
+                </AnimatePresence>
+              </ul>
+            )}
+          </div>
+        </div>
       </main>
 
       <Modal open={modalOpen} title="Create new queue" onClose={() => setModalOpen(false)}>
