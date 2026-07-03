@@ -127,3 +127,60 @@ export const overviewAnalytics = asyncHandler(async (req, res) => {
     perQueue: perQueueEnriched,
   });
 });
+
+// Condensed "today" stats for the dashboard header strip
+export const todaySummary = asyncHandler(async (req, res) => {
+  const queues = await Queue.find({ manager: req.manager._id }).select("_id");
+  const qids = queues.map((q) => q._id);
+
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const [patientsToday, servedToday, waitTimeAgg] = await Promise.all([
+    Token.countDocuments({ queue: { $in: qids }, createdAt: { $gte: startOfDay } }),
+    Token.countDocuments({ queue: { $in: qids }, status: "served", completedAt: { $gte: startOfDay } }),
+    Token.aggregate([
+      { $match: { queue: { $in: qids }, calledAt: { $ne: null }, createdAt: { $gte: startOfDay } } },
+      { $project: { waitMs: { $subtract: ["$calledAt", "$createdAt"] } } },
+      { $group: { _id: null, avgWaitMs: { $avg: "$waitMs" } } },
+    ]),
+  ]);
+
+  ok(res, {
+    patientsToday,
+    servedToday,
+    avgWaitTodayMs: waitTimeAgg[0]?.avgWaitMs || 0,
+    activeQueues: queues.length,
+  });
+});
+
+// Recent activity feed across all of the manager's queues, derived from
+// token status transitions (uses each token's `updatedAt`, which Mongoose
+// bumps automatically on every save — no separate activity log needed).
+export const recentActivity = asyncHandler(async (req, res) => {
+  const queues = await Queue.find({ manager: req.manager._id }).select("_id name");
+  const qids = queues.map((q) => q._id);
+  const queueNameMap = Object.fromEntries(queues.map((q) => [q._id.toString(), q.name]));
+
+  const tokens = await Token.find({ queue: { $in: qids } })
+    .sort({ updatedAt: -1 })
+    .limit(15)
+    .lean();
+
+  const labelFor = (t) => {
+    if (t.status === "cancelled") return { type: "cancelled", label: `${t.patientName}'s token was cancelled` };
+    if (t.status === "served") return { type: "served", label: `${t.patientName} was marked as served` };
+    if (t.status === "serving") return { type: "serving", label: `${t.patientName} called for service` };
+    return { type: "added", label: `${t.patientName} added to the queue` };
+  };
+
+  const activity = tokens.map((t) => ({
+    id: t._id,
+    tokenNumber: t.tokenNumber,
+    queueName: queueNameMap[t.queue.toString()] || "Unknown queue",
+    timestamp: t.updatedAt,
+    ...labelFor(t),
+  }));
+
+  ok(res, activity);
+});
