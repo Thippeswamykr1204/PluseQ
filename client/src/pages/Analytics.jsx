@@ -102,14 +102,14 @@ export default function Analytics() {
                   : data.totalPatients || 0}
                 accent="brand"
               />
-              <div className="card p-5 flex flex-col justify-between">
+              <div className="card p-5 flex flex-col justify-between hover:border-brand-500/25 hover:-translate-y-0.5">
                 <div className="flex items-center justify-between mb-3">
                   <div className="h-9 w-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-400">
                     <Clock size={17} />
                   </div>
                 </div>
                 <p className="text-2xl font-bold text-slate-50 tracking-tight">{formatMs(data.avgWaitTimeMs)}</p>
-                <p className="text-xs text-slate-400 mt-1">Avg wait time</p>
+                <p className="text-xs text-slate-300 mt-1">Avg wait time</p>
               </div>
               <StatCard icon={CheckCircle2} label="Patients served" value={statusBreakdown.served} accent="emerald" />
               <StatCard icon={TrendingUp} label="Currently waiting" value={statusBreakdown.waiting} accent="brand" />
@@ -117,8 +117,8 @@ export default function Analytics() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Status breakdown pie */}
-              <div className="card p-5">
-                <h3 className="text-sm font-semibold text-slate-300 mb-4">Status breakdown</h3>
+              <div className="card p-5 hover:border-brand-500/25 hover:-translate-y-0.5">
+                <h3 className="text-sm font-semibold text-slate-200 mb-4">Status breakdown</h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
                     <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={80} paddingAngle={3} animationDuration={700} animationEasing="ease-out">
@@ -141,8 +141,8 @@ export default function Analytics() {
 
               {/* Queue length trend (per-queue only) */}
               {selectedId !== "overview" && data.trend && (
-                <div className="card p-5 lg:col-span-2">
-                  <h3 className="text-sm font-semibold text-slate-300 mb-4">Queue trend (last 14 days)</h3>
+                <div className="card p-5 lg:col-span-2 hover:border-brand-500/25 hover:-translate-y-0.5">
+                  <h3 className="text-sm font-semibold text-slate-200 mb-4">Queue trend (last 14 days)</h3>
                   <ResponsiveContainer width="100%" height={220}>
                     <AreaChart data={data.trend}>
                       <defs>
@@ -164,8 +164,8 @@ export default function Analytics() {
 
               {/* Per-queue comparison (overview only) */}
               {selectedId === "overview" && data.perQueue && (
-                <div className="card p-5 lg:col-span-2">
-                  <h3 className="text-sm font-semibold text-slate-300 mb-4">Patients per queue</h3>
+                <div className="card p-5 lg:col-span-2 hover:border-brand-500/25 hover:-translate-y-0.5">
+                  <h3 className="text-sm font-semibold text-slate-200 mb-4">Patients per queue</h3>
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={data.perQueue}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
@@ -181,8 +181,8 @@ export default function Analytics() {
 
               {/* Hourly distribution (per-queue only) */}
               {selectedId !== "overview" && data.hourlyDistribution && (
-                <div className="card p-5 lg:col-span-3">
-                  <h3 className="text-sm font-semibold text-slate-300 mb-4">Peak hours (patients added by hour of day)</h3>
+                <div className="card p-5 lg:col-span-3 hover:border-brand-500/25 hover:-translate-y-0.5">
+                  <h3 className="text-sm font-semibold text-slate-200 mb-4">Peak hours (patients added by hour of day)</h3>
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={data.hourlyDistribution}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />

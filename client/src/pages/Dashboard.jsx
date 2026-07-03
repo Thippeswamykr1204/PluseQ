@@ -51,7 +51,7 @@ const SummaryCard = ({ icon: Icon, label, value, accent }) => {
     emerald: "bg-emerald-500/10 text-emerald-400",
   };
   return (
-    <div className="card p-4 flex items-center gap-3 hover:border-brand-500/25">
+    <div className="card p-4 flex items-center gap-3 hover:border-brand-500/25 hover:-translate-y-0.5">
       <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${accentMap[accent]}`}>
         <Icon size={16} />
       </div>
@@ -59,7 +59,7 @@ const SummaryCard = ({ icon: Icon, label, value, accent }) => {
         <p className="text-lg font-bold text-slate-50 leading-tight">
           {typeof value === "number" ? <CountUp value={value} /> : value}
         </p>
-        <p className="text-xs text-slate-400 truncate">{label}</p>
+        <p className="text-xs text-slate-300 truncate">{label}</p>
       </div>
     </div>
   );

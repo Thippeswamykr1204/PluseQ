@@ -10,7 +10,7 @@ export default function StatCard({ icon: Icon, label, value, suffix = "", accent
   };
   return (
     <motion.div
-      className="card p-5 hover:border-brand-500/25"
+      className="card p-5 hover:border-brand-500/25 hover:-translate-y-0.5"
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
@@ -28,7 +28,7 @@ export default function StatCard({ icon: Icon, label, value, suffix = "", accent
       <p className="text-2xl font-bold text-slate-50 tracking-tight">
         <CountUp value={value} />{suffix}
       </p>
-      <p className="text-xs text-slate-400 mt-1">{label}</p>
+      <p className="text-xs text-slate-300 mt-1">{label}</p>
     </motion.div>
   );
 }
