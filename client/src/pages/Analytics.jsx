@@ -6,7 +6,6 @@ import {
 import { Clock, Users, CheckCircle2, TrendingUp, BarChart3 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../api/axios.js";
-import Navbar from "../components/Navbar.jsx";
 import StatCard from "../components/StatCard.jsx";
 import { SkeletonCard } from "../components/Skeleton.jsx";
 import EmptyState from "../components/EmptyState.jsx";
@@ -67,8 +66,7 @@ export default function Analytics() {
     .map(([k, v]) => ({ name: k, value: v }));
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
+    <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -123,7 +121,7 @@ export default function Analytics() {
                 <h3 className="text-sm font-semibold text-slate-300 mb-4">Status breakdown</h3>
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
-                    <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={80} paddingAngle={3}>
+                    <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={80} paddingAngle={3} animationDuration={700} animationEasing="ease-out">
                       {pieData.map((entry, i) => (
                         <Cell key={i} fill={COLORS[entry.name] || "#94a3b8"} stroke="none" />
                       ))}
@@ -157,8 +155,8 @@ export default function Analytics() {
                       <XAxis dataKey="_id" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                       <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#3b63f6", strokeWidth: 1, strokeDasharray: "3 3" }} />
-                      <Area type="monotone" dataKey="added" name="Added" stroke="#3b63f6" fill="url(#addedGrad)" strokeWidth={2} />
-                      <Line type="monotone" dataKey="served" name="Served" stroke="#34d399" strokeWidth={2} dot={false} />
+                      <Area type="monotone" dataKey="added" name="Added" stroke="#3b63f6" fill="url(#addedGrad)" strokeWidth={2} animationDuration={800} animationEasing="ease-out" />
+                      <Line type="monotone" dataKey="served" name="Served" stroke="#34d399" strokeWidth={2} dot={false} animationDuration={800} animationEasing="ease-out" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -174,8 +172,8 @@ export default function Analytics() {
                       <XAxis dataKey="queueName" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                       <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(59,99,246,0.08)" }} />
-                      <Bar dataKey="total" name="Total" fill="#3b63f6" radius={[6, 6, 0, 0]} className="transition-opacity duration-150" />
-                      <Bar dataKey="served" name="Served" fill="#34d399" radius={[6, 6, 0, 0]} className="transition-opacity duration-150" />
+                      <Bar dataKey="total" name="Total" fill="#3b63f6" radius={[6, 6, 0, 0]} className="transition-opacity duration-150" animationDuration={700} animationEasing="ease-out" />
+                      <Bar dataKey="served" name="Served" fill="#34d399" radius={[6, 6, 0, 0]} className="transition-opacity duration-150" animationDuration={700} animationEasing="ease-out" animationBegin={100} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -191,7 +189,7 @@ export default function Analytics() {
                       <XAxis dataKey="_id" tickFormatter={(h) => `${h}:00`} tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                       <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(59,99,246,0.08)" }} />
-                      <Bar dataKey="count" name="Patients" fill="#3b63f6" radius={[6, 6, 0, 0]} className="transition-opacity duration-150" />
+                      <Bar dataKey="count" name="Patients" fill="#3b63f6" radius={[6, 6, 0, 0]} className="transition-opacity duration-150" animationDuration={700} animationEasing="ease-out" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -200,6 +198,6 @@ export default function Analytics() {
           </>
         )}
       </main>
-    </div>
+    </>
   );
 }
