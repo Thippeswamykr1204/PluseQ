@@ -9,10 +9,10 @@ import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 import api from "../api/axios.js";
 import { useAuth } from "../context/AuthContext.jsx";
-import Navbar from "../components/Navbar.jsx";
 import Modal from "../components/Modal.jsx";
 import EmptyState from "../components/EmptyState.jsx";
 import { SkeletonCard } from "../components/Skeleton.jsx";
+import CountUp from "../components/CountUp.jsx";
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
@@ -56,7 +56,9 @@ const SummaryCard = ({ icon: Icon, label, value, accent }) => {
         <Icon size={16} />
       </div>
       <div className="min-w-0">
-        <p className="text-lg font-bold text-slate-50 leading-tight">{value}</p>
+        <p className="text-lg font-bold text-slate-50 leading-tight">
+          {typeof value === "number" ? <CountUp value={value} /> : value}
+        </p>
         <p className="text-xs text-slate-400 truncate">{label}</p>
       </div>
     </div>
@@ -136,8 +138,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
+    <>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -185,7 +186,7 @@ export default function Dashboard() {
                   onClick={() => navigate(`/queues/${q._id}`)}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  whileHover={{ y: -3 }}
+                  whileHover={{ y: -3, scale: 1.015 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.2, delay: i * 0.04 }}
                   className="card p-5 text-left transition-all duration-200 hover:border-brand-500/40 hover:shadow-glow group"
@@ -288,6 +289,6 @@ export default function Dashboard() {
           </div>
         </form>
       </Modal>
-    </div>
+    </>
   );
 }
