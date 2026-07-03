@@ -181,7 +181,7 @@ export default function QueueDetail() {
             </div>
 
             {/* Now serving card */}
-            <div className="card p-5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="card p-5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-glow">
               <div className="flex items-center gap-3">
                 <div className="h-11 w-11 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center">
                   <Zap size={20} />
@@ -241,7 +241,7 @@ export default function QueueDetail() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -20 }}
                       transition={{ duration: 0.2 }}
-                      className={`card p-4 flex items-center gap-4 ${idx === 0 ? "border-brand-500/30" : ""}`}
+                      className={`card p-4 flex items-center gap-4 hover:border-brand-500/25 ${idx === 0 ? "border-brand-500/30" : ""}`}
                     >
                       <div className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm shrink-0 ${
                         idx === 0 ? "bg-brand-500 text-white" : "bg-surface-border text-slate-300"
