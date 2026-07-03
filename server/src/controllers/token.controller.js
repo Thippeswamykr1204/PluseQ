@@ -24,7 +24,32 @@ const emitQueueUpdate = (queueId) => {
   if (io) io.to(`queue:${queueId}`).emit("queue:updated", { queueId });
 };
 
-// List tokens for a queue, split by status, sorted by position
+// Pushed to a manager-scoped room so the Dashboard's live activity feed can
+// update in real time without polling. The manager also gets an initial
+// snapshot from GET /api/analytics/activity on page load.
+const emitActivity = (managerId, activity) => {
+  const io = getIO();
+  if (io) io.to(`manager:${managerId}`).emit("activity:new", activity);
+};
+
+const DEFAULT_SERVICE_TIME_MS = 5 * 60 * 1000; // fallback estimate: 5 min/patient before any history exists
+
+// Average service time (calledAt -> completedAt) over this queue's last 20
+// served patients. Used to estimate wait time for people still in line.
+const getAvgServiceTimeMs = async (queueId) => {
+  const recent = await Token.aggregate([
+    { $match: { queue: new mongoose.Types.ObjectId(queueId), status: "served", calledAt: { $ne: null }, completedAt: { $ne: null } } },
+    { $sort: { completedAt: -1 } },
+    { $limit: 20 },
+    { $project: { serviceMs: { $subtract: ["$completedAt", "$calledAt"] } } },
+    { $group: { _id: null, avgMs: { $avg: "$serviceMs" } } },
+  ]);
+  return recent[0]?.avgMs || DEFAULT_SERVICE_TIME_MS;
+};
+
+// List tokens for a queue, split by status, sorted by position.
+// Each waiting token gets an estimatedWaitMinutes based on how many people
+// are ahead of it and this queue's own historical average service time.
 export const listTokens = asyncHandler(async (req, res) => {
   await assertOwnedQueue(req.params.id, req.manager._id);
 
@@ -35,6 +60,16 @@ export const listTokens = asyncHandler(async (req, res) => {
   const waiting = tokens.filter((t) => t.status === "waiting");
   const serving = tokens.filter((t) => t.status === "serving");
   const served = tokens.filter((t) => t.status === "served");
+
+  if (waiting.length > 0) {
+    const avgServiceMs = await getAvgServiceTimeMs(req.params.id);
+    waiting.forEach((t, idx) => {
+      // idx patients are ahead of this one; +1 accounts for whoever is
+      // currently being served (if anyone) finishing first.
+      const aheadCount = idx + (serving.length > 0 ? 1 : 0);
+      t.estimatedWaitMinutes = Math.round((aheadCount * avgServiceMs) / 60000);
+    });
+  }
 
   ok(res, { waiting, serving, served });
 });
@@ -80,6 +115,14 @@ export const addToken = asyncHandler(async (req, res) => {
   }
 
   emitQueueUpdate(queue._id);
+  emitActivity(queue.manager, {
+    id: token._id,
+    type: "added",
+    label: `${token.patientName} added to the queue`,
+    queueName: queue.name,
+    tokenNumber: token.tokenNumber,
+    timestamp: token.createdAt,
+  });
   ok(res, token, "Patient added to queue", 201);
 });
 
@@ -144,6 +187,14 @@ export const assignNext = asyncHandler(async (req, res) => {
   await top.save();
 
   emitQueueUpdate(queue._id);
+  emitActivity(queue.manager, {
+    id: top._id,
+    type: "serving",
+    label: `${top.patientName} called for service`,
+    queueName: queue.name,
+    tokenNumber: top.tokenNumber,
+    timestamp: top.calledAt,
+  });
   ok(res, top, `Patient #${top.tokenNumber} called for service`);
 });
 
@@ -151,7 +202,7 @@ export const assignNext = asyncHandler(async (req, res) => {
 export const completeToken = asyncHandler(async (req, res) => {
   const token = await Token.findById(req.params.tokenId);
   if (!token) throw new ApiError(404, "Token not found");
-  await assertOwnedQueue(token.queue, req.manager._id);
+  const queue = await assertOwnedQueue(token.queue, req.manager._id);
 
   if (token.status !== "serving") throw new ApiError(400, "Only a patient currently being served can be completed");
 
@@ -160,6 +211,14 @@ export const completeToken = asyncHandler(async (req, res) => {
   await token.save();
 
   emitQueueUpdate(token.queue);
+  emitActivity(queue.manager, {
+    id: token._id,
+    type: "served",
+    label: `${token.patientName} was marked as served`,
+    queueName: queue.name,
+    tokenNumber: token.tokenNumber,
+    timestamp: token.completedAt,
+  });
   ok(res, token, "Marked as served");
 });
 
@@ -167,7 +226,7 @@ export const completeToken = asyncHandler(async (req, res) => {
 export const cancelToken = asyncHandler(async (req, res) => {
   const token = await Token.findById(req.params.tokenId);
   if (!token) throw new ApiError(404, "Token not found");
-  await assertOwnedQueue(token.queue, req.manager._id);
+  const queue = await assertOwnedQueue(token.queue, req.manager._id);
 
   if (["served", "cancelled"].includes(token.status)) {
     throw new ApiError(400, `Cannot cancel a token that is already ${token.status}`);
@@ -178,5 +237,13 @@ export const cancelToken = asyncHandler(async (req, res) => {
   await token.save();
 
   emitQueueUpdate(token.queue);
+  emitActivity(queue.manager, {
+    id: token._id,
+    type: "cancelled",
+    label: `${token.patientName}'s token was cancelled`,
+    queueName: queue.name,
+    tokenNumber: token.tokenNumber,
+    timestamp: token.cancelledAt,
+  });
   ok(res, token, "Token cancelled");
 });
