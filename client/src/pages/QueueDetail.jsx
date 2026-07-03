@@ -254,6 +254,11 @@ export default function QueueDetail() {
                           {t.priority && (
                             <span className="badge bg-amber-500/15 text-amber-400 shrink-0">Priority</span>
                           )}
+                          {typeof t.estimatedWaitMinutes === "number" && (
+                            <span className="badge bg-slate-500/10 text-slate-400 shrink-0">
+                              ~{t.estimatedWaitMinutes}m est. wait
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">
                           {t.phone && `${t.phone} · `}Waiting {timeAgo(t.createdAt)}
