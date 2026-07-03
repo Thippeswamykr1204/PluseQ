@@ -37,7 +37,23 @@ body {
 }
 
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-150 select-none disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface;
+  @apply relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-150 select-none disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-surface;
+}
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35) 0%, transparent 70%);
+  opacity: 0;
+  transform: scale(0.4);
+  pointer-events: none;
+  transition: transform 0.5s ease, opacity 0.6s ease;
+}
+.btn:active::after {
+  opacity: 1;
+  transform: scale(1.4);
+  transition: transform 0s, opacity 0s;
 }
 .btn-primary {
   @apply btn bg-brand-500 text-white hover:bg-brand-600 shadow-glow px-4 py-2.5 text-sm;
