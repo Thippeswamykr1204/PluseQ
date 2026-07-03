@@ -17,6 +17,15 @@ export const createQueue = asyncHandler(async (req, res) => {
   ok(res, queue, "Queue created", 201);
 });
 
+// Simple health signal from waiting-list length. Thresholds are a starting
+// point (not tuned per-hospital); an obvious future enhancement is deriving
+// this from the queue's own historical avg wait time instead of a flat count.
+const queueHealth = (waitingCount) => {
+  if (waitingCount >= 8) return "critical";
+  if (waitingCount >= 4) return "busy";
+  return "normal";
+};
+
 // List queues for logged-in manager, with live counts (waiting / served today)
 export const listQueues = asyncHandler(async (req, res) => {
   const queues = await Queue.find({ manager: req.manager._id }).sort({ createdAt: -1 }).lean();
@@ -34,11 +43,15 @@ export const listQueues = asyncHandler(async (req, res) => {
     countMap[qid][c._id.status] = c.count;
   }
 
-  const enriched = queues.map((q) => ({
-    ...q,
-    waitingCount: countMap[q._id.toString()]?.waiting || 0,
-    servingCount: countMap[q._id.toString()]?.serving || 0,
-  }));
+  const enriched = queues.map((q) => {
+    const waitingCount = countMap[q._id.toString()]?.waiting || 0;
+    return {
+      ...q,
+      waitingCount,
+      servingCount: countMap[q._id.toString()]?.serving || 0,
+      health: queueHealth(waitingCount),
+    };
+  });
 
   ok(res, enriched);
 });
