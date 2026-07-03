@@ -51,7 +51,7 @@ const SummaryCard = ({ icon: Icon, label, value, accent }) => {
     emerald: "bg-emerald-500/10 text-emerald-400",
   };
   return (
-    <div className="card p-4 flex items-center gap-3">
+    <div className="card p-4 flex items-center gap-3 hover:border-brand-500/25">
       <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${accentMap[accent]}`}>
         <Icon size={16} />
       </div>
@@ -159,101 +159,100 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Queue cards */}
-          <div className="xl:col-span-2">
-            {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
-              </div>
-            ) : queues.length === 0 ? (
-              <EmptyState
-                icon={ClipboardList}
-                title="No queues yet"
-                description="Create your first queue to start managing patients and tokens."
-                action={
-                  <button onClick={() => setModalOpen(true)} className="btn-primary">
-                    <Plus size={16} /> Create Queue
-                  </button>
-                }
-              />
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {queues.map((q, i) => {
-                  const health = HEALTH_STYLES[q.health] || HEALTH_STYLES.normal;
+        {/* Queue cards — full width now that activity has moved below */}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : queues.length === 0 ? (
+          <EmptyState
+            icon={ClipboardList}
+            title="No queues yet"
+            description="Create your first queue to start managing patients and tokens."
+            action={
+              <button onClick={() => setModalOpen(true)} className="btn-primary">
+                <Plus size={16} /> Create Queue
+              </button>
+            }
+          />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {queues.map((q, i) => {
+              const health = HEALTH_STYLES[q.health] || HEALTH_STYLES.normal;
+              return (
+                <motion.button
+                  key={q._id}
+                  onClick={() => navigate(`/queues/${q._id}`)}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ y: -3 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2, delay: i * 0.04 }}
+                  className="card p-5 text-left transition-all duration-200 hover:border-brand-500/40 hover:shadow-glow group"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="h-10 w-10 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
+                      <ActivityIcon size={18} />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`flex items-center gap-1.5 text-xs font-medium ${health.text}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${health.dot} transition-transform duration-200 group-hover:scale-125`} />
+                        {health.label}
+                      </span>
+                      <ChevronRight size={16} className="text-slate-600 group-hover:text-brand-400 group-hover:translate-x-0.5 transition-all duration-200" />
+                    </div>
+                  </div>
+                  <h3 className="text-slate-100 font-semibold mt-4 truncate">{q.name}</h3>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-1">{q.description || "No description"}</p>
+                  <div className="flex items-center gap-4 mt-4 pt-4 border-t border-surface-border">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                      <Users size={13} /> {q.waitingCount} waiting
+                    </div>
+                    {q.servingCount > 0 && <span className="badge-serving">Serving now</span>}
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Live activity feed — full width below the queue grid */}
+        <div className="card p-5">
+          <h2 className="text-sm font-semibold text-slate-300 mb-4">Live activity</h2>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-14 w-full" />)}
+            </div>
+          ) : activity.length === 0 ? (
+            <p className="text-sm text-slate-500 py-6 text-center">No activity yet. Add a patient to get started.</p>
+          ) : (
+            <ul className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 max-h-[420px] overflow-y-auto">
+              <AnimatePresence initial={false}>
+                {activity.map((item) => {
+                  const cfg = ACTIVITY_ICON[item.type] || ACTIVITY_ICON.added;
+                  const Icon = cfg.icon;
                   return (
-                    <motion.button
-                      key={q._id}
-                      onClick={() => navigate(`/queues/${q._id}`)}
-                      initial={{ opacity: 0, y: 8 }}
+                    <motion.li
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: -6 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2, delay: i * 0.04 }}
-                      className="card p-5 text-left hover:border-brand-500/40 transition-colors group"
+                      transition={{ duration: 0.2 }}
+                      className="flex items-start gap-3 p-3 rounded-xl border border-transparent transition-colors duration-200 hover:border-surface-border hover:bg-white/[0.02]"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="h-10 w-10 rounded-xl bg-brand-500/10 text-brand-400 flex items-center justify-center">
-                          <ActivityIcon size={18} />
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className={`flex items-center gap-1.5 text-xs font-medium ${health.text}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${health.dot}`} />
-                            {health.label}
-                          </span>
-                          <ChevronRight size={16} className="text-slate-600 group-hover:text-brand-400 group-hover:translate-x-0.5 transition-all" />
-                        </div>
+                      <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 ${cfg.cls}`}>
+                        <Icon size={13} />
                       </div>
-                      <h3 className="text-slate-100 font-semibold mt-4 truncate">{q.name}</h3>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-1">{q.description || "No description"}</p>
-                      <div className="flex items-center gap-4 mt-4 pt-4 border-t border-surface-border">
-                        <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                          <Users size={13} /> {q.waitingCount} waiting
-                        </div>
-                        {q.servingCount > 0 && <span className="badge-serving">Serving now</span>}
+                      <div className="min-w-0">
+                        <p className="text-sm text-slate-200 leading-snug">{item.label}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{item.queueName} · {timeAgo(item.timestamp)}</p>
                       </div>
-                    </motion.button>
+                    </motion.li>
                   );
                 })}
-              </div>
-            )}
-          </div>
-
-          {/* Live activity feed */}
-          <div className="card p-5 h-fit">
-            <h2 className="text-sm font-semibold text-slate-300 mb-4">Live activity</h2>
-            {loading ? (
-              <div className="space-y-3">
-                {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-10 w-full" />)}
-              </div>
-            ) : activity.length === 0 ? (
-              <p className="text-sm text-slate-500 py-6 text-center">No activity yet. Add a patient to get started.</p>
-            ) : (
-              <ul className="space-y-1 max-h-[520px] overflow-y-auto">
-                <AnimatePresence initial={false}>
-                  {activity.map((item) => {
-                    const cfg = ACTIVITY_ICON[item.type] || ACTIVITY_ICON.added;
-                    const Icon = cfg.icon;
-                    return (
-                      <motion.li
-                        key={item.id}
-                        layout
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex items-start gap-3 py-2.5 border-b border-surface-border last:border-0"
-                      >
-                        <div className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${cfg.cls}`}>
-                          <Icon size={13} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm text-slate-200 leading-snug">{item.label}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">{item.queueName} · {timeAgo(item.timestamp)}</p>
-                        </div>
-                      </motion.li>
-                    );
-                  })}
-                </AnimatePresence>
-              </ul>
-            )}
-          </div>
+              </AnimatePresence>
+            </ul>
+          )}
         </div>
       </main>
 
