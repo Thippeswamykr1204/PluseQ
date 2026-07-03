@@ -8,7 +8,6 @@ import {
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 import api from "../api/axios.js";
-import Navbar from "../components/Navbar.jsx";
 import Modal from "../components/Modal.jsx";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import EmptyState from "../components/EmptyState.jsx";
@@ -159,8 +158,7 @@ export default function QueueDetail() {
   const activelyServing = tokens.serving?.[0];
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
+    <>
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <button onClick={() => navigate("/dashboard")} className="btn-ghost -ml-3 mb-2">
           <ArrowLeft size={15} /> Back to queues
@@ -385,6 +383,6 @@ export default function QueueDetail() {
         onConfirm={handleCancel}
         onCancel={() => setConfirmCancel(null)}
       />
-    </div>
+    </>
   );
 }
