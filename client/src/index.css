@@ -22,7 +22,7 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: #32405c; }
 
 .card {
-  @apply bg-surface-raised border border-surface-border rounded-2xl shadow-card;
+  @apply bg-surface-raised border border-surface-border rounded-2xl shadow-card transition-all duration-200;
 }
 
 .skeleton {
@@ -64,7 +64,7 @@ body {
 }
 
 .badge {
-  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-200;
 }
 .badge-waiting { @apply badge bg-slate-500/15 text-slate-300; }
 .badge-serving { @apply badge bg-brand-500/15 text-brand-300; }

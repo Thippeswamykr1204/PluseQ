@@ -10,7 +10,7 @@ export default function StatCard({ icon: Icon, label, value, suffix = "", accent
   };
   return (
     <motion.div
-      className="card p-5"
+      className="card p-5 hover:border-brand-500/25"
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
