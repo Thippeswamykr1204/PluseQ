@@ -26,6 +26,19 @@ Manual token/queue management in hospitals (shouting numbers, paper tokens, whit
 | Cancel a token | ✅ | Soft-delete (status=cancelled), kept for analytics |
 | Analytics dashboard | ✅ | Wait time, service time, trend, peak-hour heatmap, per-queue comparison |
 
+### Beyond the spec
+
+These weren't required by the assignment brief but extend the same infrastructure already built for the required features (no new subsystems, no unproven UI):
+
+| Addition | What it uses |
+|---|---|
+| Today's summary strip (patients/avg wait/served today, active queues) | Same aggregation pipelines as the Analytics page, scoped to `createdAt >= start of day` |
+| Estimated wait time per waiting patient | Queue's own historical avg service time (last 20 served tokens) × number of people ahead |
+| Queue health indicator (normal/busy/critical) | Waiting-count threshold on the existing dashboard query — no extra DB calls |
+| Live activity feed | Token `updatedAt` timestamps (no separate activity log table) + a manager-scoped Socket.io room pushing new events in real time |
+
+Deliberately **not** added: drag-and-drop reorder (the up/down buttons already satisfy the requirement, and drag-and-drop is worse for keyboard/screen-reader accessibility), social sign-in and uptime/security trust badges (would be fake claims with nothing behind them for an assessment project with no real users or infrastructure to back them).
+
 ---
 
 ## Why These Engineering Decisions
