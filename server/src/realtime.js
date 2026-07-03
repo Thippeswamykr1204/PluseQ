@@ -14,6 +14,12 @@ export const initIO = (httpServer, clientUrl) => {
     socket.on("queue:leave", (queueId) => {
       socket.leave(`queue:${queueId}`);
     });
+    socket.on("manager:join", (managerId) => {
+      socket.join(`manager:${managerId}`);
+    });
+    socket.on("manager:leave", (managerId) => {
+      socket.leave(`manager:${managerId}`);
+    });
   });
 
   return io;
